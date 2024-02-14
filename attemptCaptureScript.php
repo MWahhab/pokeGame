@@ -5,23 +5,22 @@ require_once ("StartingAreaController.php");
 require_once ("Event.php");
 require_once ("User.php");
 
-$json = file_get_contents("php://input");
+$json        = file_get_contents("php://input");
 $requestData = json_decode($json, true);
 
 $captureData = [
-    "pokeBall"            => (string) $requestData["pokeBall"],
-    "pokemonName"         => (string) $requestData["pokemonName"],
-    "pokemonType"         => (string) $requestData["pokemonType"],
-    "pokemonGender"       => (string) $requestData["pokemonGender"],
-    "pokemonImage"        => (string) $requestData["pokemonImage"],
-    "pokemonCaptureRate"  => (string) $requestData["pokemonCaptureRate"]
+    "pokeBall"           => (string) $requestData["pokeBall"],
+    "pokemonName"        => (string) $requestData["pokemonName"],
+    "pokemonType"        => (string) $requestData["pokemonType"],
+    "pokemonGender"      => (string) $requestData["pokemonGender"],
+    "pokemonImage"       => (string) $requestData["pokemonImage"],
+    "pokemonCaptureRate" => (string) $requestData["pokemonCaptureRate"]
 ];
 
 /**
  * @var User $user
  */
-$user = unserialize($_SESSION["user"]);
-
+$user  = unserialize($_SESSION["user"]);
 $event = new Event();
 
 /**
