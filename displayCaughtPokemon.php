@@ -22,6 +22,8 @@ $caughtPokemon = $connection->select(
     "user_fid = {$user->getId()}"
 );
 
+$noPokeImage = "https://i.redd.it/2j4p8vqbpvsz.jpg";
+
 ?>
 
 <!DOCTYPE html>
@@ -36,19 +38,31 @@ $caughtPokemon = $connection->select(
 <div class="container">
     <h1>Your Pokémon</h1>
     <a href="http://localhost/pokeGame/startingArea.php" class="return-button">Return to Starting Area</a>
-    <?php foreach ($caughtPokemon as $pokemon) :?>
-    <div class="pokemon-card">
-        <div class="pokemon-image">
-            <img src="<?= htmlspecialchars($pokemon["image"])?>" alt="<?= htmlspecialchars($pokemon["name"])?>">
+    <?php if(empty($caughtPokemon)) :?>
+        <div class="pokemon-card">
+            <div class="pokemon-image">
+                <img src="<?= $noPokeImage ?>" alt="No Pokemon">
+            </div>
+            <div class="pokemon-details">
+                <h2 class="pokemon-name">No Pokemon Captured :'(</h2>
+            </div>
         </div>
-        <div class="pokemon-details">
-            <h2 class="pokemon-name"><?= ucfirst(htmlspecialchars($pokemon["name"]))?></h2>
-            <p><strong>Type:</strong> <?= ucfirst(htmlspecialchars($pokemon["type"]))?></p>
-            <p><strong>Gender:</strong> <?= ucfirst(htmlspecialchars($pokemon["gender"]))?></p>
-            <p><strong>Quantity Caught:</strong> <?= htmlspecialchars($pokemon["quantity"])?></p>
-        </div>
-    </div>
-    <?php endforeach;?>
+    <?php else: ?>
+        <?php foreach ($caughtPokemon as $pokemon) :?>
+            <div class="pokemon-card">
+                <div class="pokemon-image">
+                    <img src="<?= htmlspecialchars($pokemon["image"]) ?>" alt="<?= htmlspecialchars($pokemon["name"]) ?>">
+                </div>
+                <div class="pokemon-details">
+                    <h2 class="pokemon-name"><?= ucfirst(htmlspecialchars($pokemon["name"])) ?></h2>
+                    <p><strong>Type:</strong> <?= ucfirst(htmlspecialchars($pokemon["type"])) ?></p>
+                    <p><strong>Gender:</strong> <?= ucfirst(htmlspecialchars($pokemon["gender"])) ?></p>
+                    <p><strong>Quantity Caught:</strong> <?= htmlspecialchars($pokemon["quantity"]) ?></p>
+                </div>
+            </div>
+        <?php endforeach;?>
+    <?php endif;?>
+
 </div>
 </body>
 </html>

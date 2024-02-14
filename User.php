@@ -123,6 +123,35 @@ class User
 
         $connection->insert("user", $userInfo);
 
+        $insertedUser = $connection->select("user", [], "email = '$this->email'", 1);
+        $userId       = $insertedUser["id"];
+
+        $connection->insertMultiple(
+            "inventory",
+            [
+                [
+                    "user_fid"     => $userId,
+                    "pokeball_fid" => 1,
+                    "quantity"     => 20
+                ],
+                [
+                    "user_fid"     => $userId,
+                    "pokeball_fid" => 2,
+                    "quantity"     => 20
+                ],
+                [
+                    "user_fid"     => $userId,
+                    "pokeball_fid" => 3,
+                    "quantity"     => 20
+                ],
+                [
+                    "user_fid"     => $userId,
+                    "pokeball_fid" => 4,
+                    "quantity"     => 20
+                ],
+            ]
+        );
+
         header("Location: http://localhost/pokeGame/login.html");
     }
 
