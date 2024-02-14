@@ -53,11 +53,12 @@ class StartingAreaController
     }
 
     /**
-     * @param  array $pokeBallData Refers to the pokeball data
+     * @param  array $pokeBallData Refers to the pokeball data []
      * @return void                Reduces the amount of pokeballs in the user's inventory
      */
     private function reducePokeBallQuantity(array $pokeBallData): void
     {
+        //not validating this data $pokeBallData?
         $quantityCheck = $this->connection->select(
             "inventory",
             [],
@@ -96,21 +97,21 @@ class StartingAreaController
             ['inventory' => 'inventory.pokeball_fid = pokeball.id']
         );
 
+        if (empty($pokeBallData)) {
+            return; // you're not handling it with care. What if we get nothing back. add event handling too
+        }
+
         $realCaptureChance = ($pokeBallData["capture_rate"]/$captureAttemptData["pokemonCaptureRate"]) * 100;
 
+        $this->reducePokeBallQuantity($pokeBallData);
+        $this->event->setError(200); //200 due to no issues
+
         if(rand(1, 100) > $realCaptureChance) {
-            $this->reducePokeBallQuantity($pokeBallData);
-
             $this->event->addEvent("{$captureAttemptData['pokemonName']} escaped from your ball! Try again!");
-            $this->event->setError(200); //200 due to no issues
-
             return;
         }
 
-        $this->reducePokeBallQuantity($pokeBallData);
-
         $this->event->addEvent("{$captureAttemptData['pokemonName']} has successfully been captured! Continue exploring or head back home!");
-        $this->event->setError(200); //200 due to no issues
 
         $caughtPokemon = $this->connection->select(
             "caught_pokemon",

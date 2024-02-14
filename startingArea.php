@@ -30,7 +30,14 @@ $pokeballs = $connection->select(
                 "pokeball" => "pokeball.id = inventory.pokeball_fid",
                 "user"     => "user.id     = inventory.user_fid"
             ]);
+// you're accessing array keys directly of this $pokeballs without ever checking if its populated
 
+if (empty($pokeballs)) {
+
+    //handle it
+
+    return;
+}
 ?>
 
 <!DOCTYPE html>
@@ -108,13 +115,14 @@ $pokeballs = $connection->select(
 
 <script>
 
-
     function initiateExploration() {
         let randomPokemon = Math.floor(Math.random() * 1025) + 1;
 
+        // every time we are exploring we're making an api call. this is a third party api
+        // it costs resources to maintain and we're abusing it.
+        // lets fetch all the data we need from it, store it in our own database and use our own database from here onwards
         axios.get("https://pokeapi.co/api/v2/pokemon/" + randomPokemon)
             .then(function(response) {
-            //console.log(response.data);
             displayPokemon(response.data);
         })
             .catch(function (e) {
@@ -137,8 +145,6 @@ $pokeballs = $connection->select(
         let pokemonType        = pokemonData["types"][0]["type"]["name"];
         let pokemonCaptureRate = Math.floor(Math.random() * 100) + 1;
 
-        //console.log(pokemonData["sprites"]["other"]["official-artwork"]["front-default"]);
-
         document.getElementById("pokemon-image").src              = pokemonImage;
         document.getElementById("pokemon-name").innerHTML         = "You ran into a wild " + pokemonName + "! Get your pokeballs ready!";
         document.getElementById("pokemon-gender").innerHTML       = "It appears to be a " + pokemonGender + "!";
@@ -150,18 +156,16 @@ $pokeballs = $connection->select(
         document.getElementById("pokemon-gender").value       = pokemonGender;
         document.getElementById("pokemon-type").value         = pokemonType;
         document.getElementById("pokemon-capture-rate").value = pokemonCaptureRate;
-
-        //console.log(document.getElementById("pokemon-image").value);
     }
 
     function attemptCapture() {
         axios.post("http://localhost/pokeGame/attemptCaptureScript.php", {
-            pokeBall           : document.getElementById("pokemon-ball").value,
-            pokemonName        : document.getElementById("pokemon-name").value,
-            pokemonType        : document.getElementById("pokemon-type").value,
-            pokemonGender      : document.getElementById("pokemon-gender").value,
-            pokemonImage       : document.getElementById("pokemon-image").value,
-            pokemonCaptureRate : document.getElementById("pokemon-capture-rate").value
+            pokeBall          : document.getElementById("pokemon-ball").value,
+            pokemonName       : document.getElementById("pokemon-name").value,
+            pokemonType       : document.getElementById("pokemon-type").value,
+            pokemonGender     : document.getElementById("pokemon-gender").value,
+            pokemonImage      : document.getElementById("pokemon-image").value,
+            pokemonCaptureRate: document.getElementById("pokemon-capture-rate").value
         }).then((response) => {
             if(response.data.length<=0) {
                 console.log("Nothing was sent in the response!");
@@ -206,8 +210,8 @@ $pokeballs = $connection->select(
     }
 
     function headBack() {
-        document.getElementById("embark").style.display          = "block";
-        document.getElementById("instigate").style.display       = "block";
+        document.getElementById("embark").style.display    = "block";
+        document.getElementById("instigate").style.display = "block";
         resetExploration();
 
         document.getElementById("title").innerHTML = "You're back at the starting area!";
