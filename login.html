@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<style>
+    .login-form {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
+
+    .login-form h2 {
+        text-align: center;
+    }
+
+    .register-link {
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .register-link a {
+        color: #5cb85c;
+        text-decoration: none;
+    }
+
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+
+</style>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="styles.css" rel="stylesheet">
+    <title>Login to pokeGame here!</title>
+</head>
+<body>
+
+<div class="login-form">
+    <form action="http://localhost/pokeGame/authenticator.php" method="post">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="text" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Login">
+        </div>
+        <p class="register-link">Not registered? <a href="http://localhost/pokeGame/register.html">Register here</a></p>
+    </form>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.registration-form, .login-form {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 0 auto 15px auto;
+}
+
+.registration-form h2, .login-form h2 {
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group input[type="submit"] {
+    width: calc(100% - 16px); /* Adjusted width to account for padding and border */
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box; /* Ensures padding is included in the width */
+}
+
+.form-group input[type="submit"] {
+    background-color: #5cb85c;
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+.form-group input[type="submit"]:hover {
+    background-color: #4cae4c;
+}
+
+.register-link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.register-link a {
+    color: #5cb85c;
+    text-decoration: none;
+}
+
+.register-link a:hover {
+    text-decoration: underline;
+}
+
+.pokeball-info {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.pokeball {
+    margin-left: 10px;
+    border: 2px solid #f39c12; /* Add a border */
+    border-radius: 8px; /* Add rounded corners for a nicer look */
+    padding: 10px; /* Add some padding for space inside the border */
+}
+
+.pokeball img {
+    width: 30px;
+    height: 30px;
+}
+
+.trainer-image {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.embark-btn {
+    display: block;
+    margin: 20px auto;
+}
+
+.pokeball-time-info, .tip-sticky {
+    position: fixed;
+}
+
+.pokeball-time-info {
+    bottom: 20px;
+    right: 20px;
+}
+
+.pokeball-time-popup, .tip-sticky {
+    background-color: #f8f8f8;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+.pokeball-time-popup {
+    background-color: #fff;
+}
+
+.tip-sticky {
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.pokeball img {
+    width: 50px; /* Adjust the size as needed */
+    height: 50px; /* Adjust the size as needed */
+}
+
+.trainer-image img {
+    max-width: 100px; /* Adjust the maximum width as needed */
+    height: auto; /* Maintain aspect ratio */
+}
+
+#pokemon-events {
+    display: none;
+    border: 2px solid blue;
+    padding: 10px;
+    background-color: lightblue;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Updated sidebar styles */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+    z-index: 999; /* Ensure it's above other content */
+    display: flex; /* Display as flex container */
+    flex-direction: column; /* Arrange items vertically */
+    align-items: center; /* Center items horizontally */
+}
+
+.sidebar-btn {
+    margin-bottom: 10px; /* Adjust spacing between buttons */
+    width: 120px;
+    padding: 10px;
+    border: none;
+    background-color: #5cb85c;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.sidebar-btn:hover {
+    background-color: #4cae4c;
+}
+
