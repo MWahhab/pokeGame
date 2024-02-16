@@ -119,7 +119,7 @@ class StartingAreaController
         $caughtPokemon = $this->connection->select(
             "caught_pokemon",
             [],
-            "user_fid = {$this->user->getId()} AND pokemon_fid = {$captureAttemptData['pokemonId']}",
+            "user_fid = {$this->user->getId()} AND pokemon_fid = {$captureAttemptData['pokemonId']} AND gender = '{$captureAttemptData['pokemonGender']}'",
             1
         );
 
@@ -171,18 +171,16 @@ class StartingAreaController
      */
     public function retrieveRandomPokemon(): array|null
     {
-        $pokemonList = $this->connection->select("pokemon");
-
-        if(empty($pokemonList)) {
+        $pokemonCount = $this->connection->select("pokemon", ['COUNT(id) as amountOfPokemon'], '', 1);
+        $pokemonCount = (int) $pokemonCount['amountOfPokemon'];
+        if(!$pokemonCount) {
             $this->event->addEvent("Empty pokemon list! Could not retrieve pokemon!");
             $this->event->setError(204); //no content
 
             return null;
         }
 
-        $randomIndex = rand(1, count($pokemonList)) - 1;
-
-        return $pokemonList[$randomIndex];
+        return $this->connection->select("pokemon", [], 'id = ' . 1, 1);
     }
 
     /**
@@ -216,30 +214,49 @@ class StartingAreaController
      */
     public static function updateInventory(database\Database $connection):void
     {
-        $currentTimestamp = time();
+        $minutes               = 5;
+        $pokeballRefreshAmount = 3;
+        $currentTimestamp      = time();
+        $oldTimestamp          = time();
 
-        $oldTimestamp = file_exists("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php") ?
-            intval(file_get_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php")) : $currentTimestamp;
-
-        $timePassed = $currentTimestamp - $oldTimestamp;
-        $interval   = 5 * 60; //seconds, so 5 min intervals
-
-        $intervalsPassed = floor($timePassed/$interval);
-
-        if($intervalsPassed == 0) {
-            die("5 minutes havent passed");
+        if (file_exists("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt")) {
+            $oldTimestamp = intval(file_get_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt"));
+        } else {
+            file_put_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt", $oldTimestamp);
         }
 
-        $currentQuantities = $connection->select("inventory", ["pokeball_fid", "quantity"]);
+        $refreshAt = $oldTimestamp + ($minutes * 60);
 
-        foreach ($currentQuantities as $row) {
-            $newQuantity = ($row['quantity'] + 3) * $intervalsPassed;
-
-            $connection->update("inventory", ["quantity" => $newQuantity], ["pokeball_fid" => $row['pokeball_fid']]);
+        if ($refreshAt > $currentTimestamp) {
+            return;
         }
 
-        $newTimestamp = $oldTimestamp + ($intervalsPassed * $interval);
-        file_put_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php", $newTimestamp);
+        $pokeballs = $connection->select(
+            "inventory",
+            [
+                "pokeball.name",
+                "inventory.quantity",
+                "inventory.pokeball_fid",
+                "inventory.user_fid"
+            ],
+            '',
+            0,
+            [
+                "pokeball" => "pokeball.id = inventory.pokeball_fid",
+            ]);
+
+        foreach ($pokeballs as $ball) {
+            $connection->update(
+                "inventory",
+                ["quantity" => ($ball['quantity'] + $pokeballRefreshAmount)],
+                [
+                    "pokeball_fid" => $ball['pokeball_fid'],
+                    "user_fid" => $ball['user_fid']
+                ]
+            );
+        }
+
+        file_put_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt", $currentTimestamp);
     }
 
 }

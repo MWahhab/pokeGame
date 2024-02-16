@@ -15,8 +15,7 @@ $event = new Event();
  */
 $controller = new StartingAreaController($connection, $user, $event);
 
-$dbPokemon = $controller->retrieveRandomPokemon();
-
+$dbPokemon      = $controller->retrieveRandomPokemon();
 $alteredPokemon = $controller->calculateRealCaptureRate($dbPokemon);
 
 $json = json_encode($alteredPokemon);
