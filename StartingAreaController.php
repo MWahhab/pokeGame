@@ -180,7 +180,7 @@ class StartingAreaController
             return null;
         }
 
-        return $this->connection->select("pokemon", [], 'id = ' . 1, 1);
+        return $this->connection->select("pokemon", [], 'id = ' . rand(1, $pokemonCount), 1);
     }
 
     /**
