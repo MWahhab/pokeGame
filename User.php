@@ -154,5 +154,4 @@ class User
 
         header("Location: http://localhost/pokeGame/login.html");
     }
-
 }

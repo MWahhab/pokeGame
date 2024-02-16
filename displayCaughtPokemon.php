@@ -13,13 +13,15 @@ $user = unserialize($_SESSION["user"]);
 $caughtPokemon = $connection->select(
     "caught_pokemon",
     [
-        "name",
-        "type",
-        "gender",
-        "image",
-        "quantity"
+        "pokemon.name",
+        "pokemon.type",
+        "caught_pokemon.gender",
+        "pokemon.image",
+        "caught_pokemon.quantity"
     ],
-    "user_fid = {$user->getId()}"
+    "user_fid = {$user->getId()}",
+    0,
+    ["pokemon" => "pokemon.id = caught_pokemon.pokemon_fid"]
 );
 
 $noPokeImage = "https://i.redd.it/2j4p8vqbpvsz.jpg";

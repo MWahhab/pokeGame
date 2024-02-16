@@ -10,11 +10,13 @@ $requestData = json_decode($json, true);
 
 $captureData = [
     "pokeBall"           => (string) $requestData["pokeBall"],
+    "pokemonId"          => (string) $requestData["pokemonId"],
     "pokemonName"        => (string) $requestData["pokemonName"],
     "pokemonType"        => (string) $requestData["pokemonType"],
     "pokemonGender"      => (string) $requestData["pokemonGender"],
     "pokemonImage"       => (string) $requestData["pokemonImage"],
-    "pokemonCaptureRate" => (string) $requestData["pokemonCaptureRate"]
+    "pokemonCaptureRate" => (string) $requestData["pokemonCaptureRate"],
+    "finalAttempt"       => (bool)   $requestData["finalAttempt"]
 ];
 
 /**

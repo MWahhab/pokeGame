@@ -40,11 +40,11 @@ h1, h2 {
 .form-group input[type="email"],
 .form-group input[type="password"],
 .form-group input[type="submit"] {
-    width: calc(100% - 16px); /* Adjusted width to account for padding and border */
+    width: calc(100% - 16px);
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    box-sizing: border-box; /* Ensures padding is included in the width */
+    box-sizing: border-box;
 }
 
 .form-group input[type="submit"] {
@@ -79,9 +79,9 @@ h1, h2 {
 
 .pokeball {
     margin-left: 10px;
-    border: 2px solid #f39c12; /* Add a border */
-    border-radius: 8px; /* Add rounded corners for a nicer look */
-    padding: 10px; /* Add some padding for space inside the border */
+    border: 2px solid #f39c12;
+    border-radius: 8px;
+    padding: 10px;
 }
 
 .pokeball img {
@@ -125,17 +125,17 @@ h1, h2 {
 }
 
 .pokeball img {
-    width: 50px; /* Adjust the size as needed */
-    height: 50px; /* Adjust the size as needed */
+    width: 50px;
+    height: 50px;
 }
 
 .trainer-image img {
-    max-width: 100px; /* Adjust the maximum width as needed */
-    height: auto; /* Maintain aspect ratio */
+    max-width: 100px;
+    height: auto;
 }
 
 #pokemon-events {
-    display: none;
+    display: block;
     border: 2px solid blue;
     padding: 10px;
     background-color: lightblue;
@@ -145,7 +145,6 @@ h1, h2 {
     transform: translate(-50%, -50%);
 }
 
-/* Updated sidebar styles */
 .sidebar {
     position: fixed;
     left: 0;
@@ -154,14 +153,14 @@ h1, h2 {
     background-color: #f8f8f8;
     padding: 10px;
     border-right: 1px solid #ccc;
-    z-index: 999; /* Ensure it's above other content */
-    display: flex; /* Display as flex container */
-    flex-direction: column; /* Arrange items vertically */
-    align-items: center; /* Center items horizontally */
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .sidebar-btn {
-    margin-bottom: 10px; /* Adjust spacing between buttons */
+    margin-bottom: 10px;
     width: 120px;
     padding: 10px;
     border: none;

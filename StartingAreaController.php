@@ -37,11 +37,13 @@ class StartingAreaController
     {
         if(!isset(
             $captureAttemptData["pokeBall"],
+            $captureAttemptData["pokemonId"],
             $captureAttemptData["pokemonName"],
             $captureAttemptData["pokemonType"],
             $captureAttemptData["pokemonGender"],
             $captureAttemptData["pokemonImage"],
-            $captureAttemptData["pokemonCaptureRate"]
+            $captureAttemptData["pokemonCaptureRate"],
+            $captureAttemptData["finalAttempt"]
         ))
         {
             $this->event->addEvent("Invalid Capture Data");
@@ -87,7 +89,6 @@ class StartingAreaController
         $pokeBallData = $this->connection->select(
             "pokeball",
             [
-                "pokeball.capture_rate",
                 "pokeball.id",
                 "pokeball.name",
                 "inventory.quantity"
@@ -98,25 +99,27 @@ class StartingAreaController
         );
 
         if (empty($pokeBallData)) {
-            return; // you're not handling it with care. What if we get nothing back. add event handling too
+            $this->event->addEvent("Invalid capture attempt data. Cannot initiate capture");
+            $this->event->setError(400);
+            return;
         }
 
-        $realCaptureChance = ($pokeBallData["capture_rate"]/$captureAttemptData["pokemonCaptureRate"]) * 100;
-
         $this->reducePokeBallQuantity($pokeBallData);
-        $this->event->setError(200); //200 due to no issues
 
-        if(rand(1, 100) > $realCaptureChance) {
-            $this->event->addEvent("{$captureAttemptData['pokemonName']} escaped from your ball! Try again!");
+        if(rand(1, 100) > $captureAttemptData["pokemonCaptureRate"]) {
+            $this->event->addEvent(
+                $captureAttemptData["finalAttempt"] ? "{$captureAttemptData['pokemonName']} escaped from your ball into the wilderness! Continue exploring or head back home!"
+                    : "{$captureAttemptData['pokemonName']} escaped from your ball! Try again! Or continue exploring or head back home!");
             return;
         }
 
         $this->event->addEvent("{$captureAttemptData['pokemonName']} has successfully been captured! Continue exploring or head back home!");
+        $this->event->setError(200); //200 due to no issues
 
         $caughtPokemon = $this->connection->select(
             "caught_pokemon",
             [],
-            "user_fid = {$this->user->getId()} AND name = '{$captureAttemptData["pokemonName"]}'",
+            "user_fid = {$this->user->getId()} AND pokemon_fid = {$captureAttemptData['pokemonId']}",
             1
         );
 
@@ -125,12 +128,10 @@ class StartingAreaController
             $this->connection->insert(
                 "caught_pokemon",
                 [
-                    "user_fid" => $this->user->getId(),
-                    "name"     => $captureAttemptData["pokemonName"],
-                    "type"     => $captureAttemptData["pokemonType"],
-                    "gender"   => $captureAttemptData["pokemonGender"],
-                    "image"    => $captureAttemptData["pokemonImage"],
-                    "quantity" => 1
+                    "user_fid"    => $this->user->getId(),
+                    "pokemon_fid" => $captureAttemptData['pokemonId'],
+                    "gender"      => $captureAttemptData['pokemonGender'],
+                    "quantity"    => 1
                 ]);
 
             return;
@@ -139,7 +140,106 @@ class StartingAreaController
         $this->connection->update(
             "caught_pokemon",
             ["quantity" => $caughtPokemon["quantity"] + 1],
-            ["user_fid" => $this->user->getId(), "name" => $captureAttemptData["pokemonName"]]
+            [
+                "user_fid"    => $this->user->getId(),
+                "pokemon_fid" => $captureAttemptData['pokemonId'],
+                "gender"      => $captureAttemptData['pokemonGender']
+            ]
         );
     }
+
+    /**
+     * @param  \database\Database $connection  Refers to the database connection
+     * @param  array              $pokemonList Refers to the list of pokemon
+     * @return void                            populates the pokemon table in the database
+     */
+    public static function populatePokemon(database\Database $connection, array $pokemonList): void
+    {
+        if(empty($pokemonList)) {
+            die("Empty list of pokemons provided");
+        }
+
+        if(!empty($connection->select("pokemon"))) {
+            $connection->deleteAll("pokemon");
+        }
+
+        $connection->insertMultiple("pokemon", $pokemonList);
+    }
+
+    /**
+     * @return array|null Retrieves a random pokemon from the database
+     */
+    public function retrieveRandomPokemon(): array|null
+    {
+        $pokemonList = $this->connection->select("pokemon");
+
+        if(empty($pokemonList)) {
+            $this->event->addEvent("Empty pokemon list! Could not retrieve pokemon!");
+            $this->event->setError(204); //no content
+
+            return null;
+        }
+
+        $randomIndex = rand(1, count($pokemonList)) - 1;
+
+        return $pokemonList[$randomIndex];
+    }
+
+    /**
+     * @param  array      $pokemon Refers to the pokemon
+     * @return array|null          Calculates the real capture rate after taking into account both the difficulty of the
+     *                             pokemon and the effectiveness of the pokeball being used
+     */
+    public function calculateRealCaptureRate(array $pokemon):array|null
+    {
+        if(empty($pokemon)) {
+            $this->event->addEvent("No pokemon passed to calculate real capture rate");
+            $this->event->setError("400");
+            return null;
+        }
+
+        $pokeballs = $this->connection->select("pokeball", ["name", "capture_rate"]);
+
+        for($i=0; $i<count($pokeballs); $i++) {
+            $pokeballs[$i]["capture_rate"] *= (100 / $pokemon["capture_rate"]);
+        } //was using a foreach here before but it didnt alter the array. figured out its because
+          // foreach simply makes a copy
+
+        $pokemon["capture_rate"] = $pokeballs;
+
+        return $pokemon;
+    }
+
+    /**
+     * @param  \database\Database $connection Refers to the database connection
+     * @return void                           Updates every player's inventory every 5 minutes
+     */
+    public static function updateInventory(database\Database $connection):void
+    {
+        $currentTimestamp = time();
+
+        $oldTimestamp = file_exists("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php") ?
+            intval(file_get_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php")) : $currentTimestamp;
+
+        $timePassed = $currentTimestamp - $oldTimestamp;
+        $interval   = 5 * 60; //seconds, so 5 min intervals
+
+        $intervalsPassed = floor($timePassed/$interval);
+
+        if($intervalsPassed == 0) {
+            die("5 minutes havent passed");
+        }
+
+        $currentQuantities = $connection->select("inventory", ["pokeball_fid", "quantity"]);
+
+        foreach ($currentQuantities as $row) {
+            $newQuantity = ($row['quantity'] + 3) * $intervalsPassed;
+
+            $connection->update("inventory", ["quantity" => $newQuantity], ["pokeball_fid" => $row['pokeball_fid']]);
+        }
+
+        $newTimestamp = $oldTimestamp + ($intervalsPassed * $interval);
+        file_put_contents("C:/xampp/htdocs/pokeGame/pokeball_timestamp.txt.php", $newTimestamp);
+    }
+
 }

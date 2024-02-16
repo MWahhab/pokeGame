@@ -30,14 +30,11 @@ $pokeballs = $connection->select(
                 "pokeball" => "pokeball.id = inventory.pokeball_fid",
                 "user"     => "user.id     = inventory.user_fid"
             ]);
-// you're accessing array keys directly of this $pokeballs without ever checking if its populated
 
 if (empty($pokeballs)) {
-
-    //handle it
-
-    return;
+    die("Pokeballs aren't set! Cannot finish loading");
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -80,11 +77,15 @@ if (empty($pokeballs)) {
 
         <img id="pokemon-image" src="" alt="Pokemon Image">
         <div id="pokemon-details">
+            <div id="pokemon-id" style="display: none"></div>
+            <div id="pokemon-capture-rates" style="display: none"></div>
+            <div id="pokemon-attempts-limit" style="display: none"></div>
+            <div id="pokemon-attempts-count" style="display: none"></div>
             <p id="pokemon-gender"></p>
             <p id="pokemon-type"></p>
             <p id="pokemon-capture-rate"></p>
             <div id="pokemon-events" style="display: none"></div>
-            <select id="pokemon-ball">
+            <select id="pokemon-ball" onChange="alterCaptureRate()">
                 <?php foreach ($pokeballs as $pokeball) : ?>
                     <?php if ($pokeball["quantity"] > 0) : ?>
                         <option value="<?= htmlspecialchars($pokeball["name"]) ?>">
@@ -115,18 +116,23 @@ if (empty($pokeballs)) {
 
 <script>
 
-    function initiateExploration() {
-        let randomPokemon = Math.floor(Math.random() * 1025) + 1;
+    window.onload = () => {
+        axios.get("http://localhost/pokeGame/updateInventory.php")
+            .then((response) => {
+                console.log(response);
+            })
+            .catch(e => {
+                console.log("Error updating inventory", e);
+            })
+    }
 
-        // every time we are exploring we're making an api call. this is a third party api
-        // it costs resources to maintain and we're abusing it.
-        // lets fetch all the data we need from it, store it in our own database and use our own database from here onwards
-        axios.get("https://pokeapi.co/api/v2/pokemon/" + randomPokemon)
+    function initiateExploration() {
+        axios.get("http://localhost/pokeGame/retrieveFromDatabase.php")
             .then(function(response) {
             displayPokemon(response.data);
         })
             .catch(function (e) {
-                console.log("Error fetching pokemon from API:", e)
+                console.log("Error fetching pokemon from database:", e)
             })
     }
 
@@ -139,33 +145,51 @@ if (empty($pokeballs)) {
 
         document.getElementById("title").innerHTML = "You've stumbled onto a pokemon!"
 
-        let pokemonImage       = pokemonData["sprites"]["other"]["official-artwork"]["front_default"];
-        let pokemonName        = pokemonData["name"];
-        let pokemonGender      = ((Math.floor(Math.random() * 2) + 1) === 1 ? "male" : "female");
-        let pokemonType        = pokemonData["types"][0]["type"]["name"];
-        let pokemonCaptureRate = Math.floor(Math.random() * 100) + 1;
+        let pokemonImage        = pokemonData["image"];
+        let pokemonName         = pokemonData["name"];
+        let pokemonGender       = Math.floor(Math.random() * 2) + 1 === 1 ? "male" : "female";
+        let pokemonType         = pokemonData["type"];
+
+        let attemptsLimit = Math.floor(Math.random() * 5) + 1;
+        let attemptsCount = 0;
 
         document.getElementById("pokemon-image").src              = pokemonImage;
         document.getElementById("pokemon-name").innerHTML         = "You ran into a wild " + pokemonName + "! Get your pokeballs ready!";
         document.getElementById("pokemon-gender").innerHTML       = "It appears to be a " + pokemonGender + "!";
         document.getElementById("pokemon-type").innerHTML         = "It's of type: " + pokemonType + "!";
-        document.getElementById("pokemon-capture-rate").innerHTML = "The chance of capturing it is " + pokemonCaptureRate + "%!";
 
-        document.getElementById("pokemon-image").value        = pokemonImage;
-        document.getElementById("pokemon-name").value         = pokemonName;
-        document.getElementById("pokemon-gender").value       = pokemonGender;
-        document.getElementById("pokemon-type").value         = pokemonType;
-        document.getElementById("pokemon-capture-rate").value = pokemonCaptureRate;
+        document.getElementById("pokemon-image").value          = pokemonImage;
+        document.getElementById("pokemon-name").value           = pokemonName;
+        document.getElementById("pokemon-gender").value         = pokemonGender;
+        document.getElementById("pokemon-type").value           = pokemonType;
+        document.getElementById("pokemon-capture-rates").value  = pokemonData["capture_rate"];
+        document.getElementById("pokemon-id").value             = pokemonData["id"];
+        document.getElementById("pokemon-attempts-count").value = attemptsCount;
+        document.getElementById("pokemon-attempts-limit").value = attemptsLimit;
+
+        alterCaptureRate();
     }
 
     function attemptCapture() {
+        let attempts = document.getElementById("pokemon-attempts-count");
+        let limit    = document.getElementById("pokemon-attempts-limit");
+
+        attempts.value++;
+
+        if(attempts == limit) {
+            document.getElementById("attempt-capture").style.display = "none";
+            document.getElementById("pokemon-ball").style.display    = "none";
+        }
+
         axios.post("http://localhost/pokeGame/attemptCaptureScript.php", {
             pokeBall          : document.getElementById("pokemon-ball").value,
+            pokemonId         : document.getElementById("pokemon-id").value,
             pokemonName       : document.getElementById("pokemon-name").value,
             pokemonType       : document.getElementById("pokemon-type").value,
             pokemonGender     : document.getElementById("pokemon-gender").value,
             pokemonImage      : document.getElementById("pokemon-image").value,
-            pokemonCaptureRate: document.getElementById("pokemon-capture-rate").value
+            pokemonCaptureRate: document.getElementById("pokemon-capture-rate").value,
+            finalAttempt      : attempts == limit
         }).then((response) => {
             if(response.data.length<=0) {
                 console.log("Nothing was sent in the response!");
@@ -181,12 +205,14 @@ if (empty($pokeballs)) {
     }
 
     function displayChanges(responseData) {
-        document.getElementById("attempt-capture").style.display    = "none";
-        document.getElementById("pokemon-ball").style.display       = "none";
         document.getElementById("head-back").style.display          = "block";
         document.getElementById("continue-exploring").style.display = "block";
 
+        newEvent();
+
         if (responseData["error"] == 200) {
+            document.getElementById("attempt-capture").style.display = "none";
+            document.getElementById("pokemon-ball").style.display    = "none";
             let name = document.getElementById("pokemon-ball").value;
             let quantityElement = document.getElementById(`quantity-${name}`);
             let currentValue = parseInt(quantityElement.innerHTML.substring(1)); // Remove the "x" character
@@ -194,10 +220,6 @@ if (empty($pokeballs)) {
                 quantityElement.innerHTML = "x" + (currentValue - 1);
             }
         }
-
-
-        let pokEvents = document.getElementById("pokemon-events");
-        pokEvents.innerHTML = "";
 
         for(let i=0; i<responseData["events"].length; i++) {
             let pokEvent = document.createElement("p");
@@ -227,6 +249,30 @@ if (empty($pokeballs)) {
         document.getElementById("attempt-capture").style.display = "block";
         document.getElementById("pokemon-ball").style.display    = "block";
         document.getElementById("pokemon-events").style.display  = "none";
+    }
+
+    function alterCaptureRate() {
+        let captureRates = document.getElementById("pokemon-capture-rates").value;
+        let currentBall  = document.getElementById("pokemon-ball").value;
+
+        for (let i = 0; i < captureRates.length; i++) {
+            let pokeball = captureRates[i];
+            if (pokeball["name"] === currentBall) {
+                pokeball["capture_rate"] = (pokeball["capture_rate"] > 100) ? 100 : pokeball["capture_rate"];
+
+                document.getElementById("pokemon-capture-rate").innerHTML =
+                    "The chance of capturing it is " + pokeball["capture_rate"].toFixed(2) + "%!"; //rounded here
+                document.getElementById("pokemon-capture-rate").value = pokeball["capture_rate"];
+                break;
+            }
+        }
+    }
+
+    function newEvent() {
+        let pokEvents = document.getElementById("pokemon-events");
+        pokEvents.innerHTML = "";
+
+        pokEvents.style.backgroundColor = pokEvents.style.backgroundColor === "lightblue" ? "lightgreen" : "lightblue";
     }
 
 </script>
